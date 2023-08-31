@@ -7,6 +7,9 @@ from PIL import Image
 import pytesseract
 import io
 import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 def process_image(image: UploadFile) -> dict:
     """
@@ -21,12 +24,15 @@ def process_image(image: UploadFile) -> dict:
     Raises:
         HTTPException: May raise HTTP request errors if the image cannot be read or content cannot be found.
     """
+    logger.info("Analyzing image:%s",image.filename)
+    
     image_data = image.file.read()
     
     cached_result = get_cached_result (image_data)
     
     if cached_result:
         cached_results = json.loads(cached_result)
+        logger.info("Returning cached result")
         return JSONResponse(content=cached_results)
     
     try:
@@ -50,6 +56,7 @@ def process_image(image: UploadFile) -> dict:
         "findings": processed_findings,
     }
     cache_result(image_data,json.dumps(response))
-
+    logger.info("Image analysis complete")
+    
     return JSONResponse(content=response)
 
